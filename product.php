@@ -453,6 +453,22 @@ if ($prod_first_img && file_exists(__DIR__ . '/assets/uploads/' . $prod_first_im
                 <?php endif; ?>
             </div>
             <div class="pv-desc content-markup"><?= !empty($product['description']) ? $product['description'] : '' ?></div>
+            
+            <?php
+            // Convert normal YouTube url to embed url
+            $yt_embed = false;
+            if (!empty($product['youtube_url'])) {
+                if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $product['youtube_url'], $match)) {
+                    $yt_embed = "https://www.youtube.com/embed/" . $match[1];
+                }
+            }
+            if ($yt_embed):
+            ?>
+            <div style="margin-bottom: 28px; border-radius: 14px; overflow: hidden; border: 1px solid var(--border, #eaebef); aspect-ratio: 16/9;">
+                <iframe width="100%" height="100%" src="<?= $yt_embed ?>" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="display:block;"></iframe>
+            </div>
+            <?php endif; ?>
+
             <div class="pv-actions">
                 <button onclick="openContactModal('product-page-<?= $id ?>')" class="pv-btn pv-btn-order" style="cursor:pointer;border:none;font-family:inherit;">Pesan Sekarang</button>
                 <?php if (!empty($product['demo_link'])): ?>
