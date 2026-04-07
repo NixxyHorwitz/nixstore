@@ -193,9 +193,10 @@ if ($prod_first_img && file_exists(__DIR__ . '/assets/uploads/' . $prod_first_im
         .pv-thumb-slide { width: 70px; height: 70px; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; border-radius: 8px; overflow: hidden; border: 2px solid transparent; box-sizing: border-box; }
         .pv-thumb-slide.swiper-slide-thumb-active { opacity: 1; border-color: var(--text-primary, #111); }
 
-        .pv-actions { display: flex; gap: 10px; }
+        .pv-actions { display: flex; flex-wrap: wrap; gap: 10px; }
         .pv-btn {
-            flex: 1;
+            flex: 1 1 calc(50% - 10px);
+            min-width: 130px;
             padding: 13px 16px;
             text-align: center;
             border-radius: 10px;
@@ -217,8 +218,8 @@ if ($prod_first_img && file_exists(__DIR__ . '/assets/uploads/' . $prod_first_im
             .pv-wrap    { padding: 70px 14px 40px; }
             .pv-title   { font-size: 20px; }
             .pv-price   { font-size: 20px; }
-            .pv-actions { flex-direction: column; }
-            .pv-btn     { width: 100%; }
+            .pv-actions { flex-direction: row; flex-wrap: wrap; }
+            .pv-btn     { width: auto; flex: 1 1 calc(50% - 10px); min-width: 0; }
         }
 
         /* ─── FLOATING LEAVES ─── */

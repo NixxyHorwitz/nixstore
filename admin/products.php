@@ -561,7 +561,7 @@ function renderImageGrid(images, productId) {
         if(img.is_mock) return; // skip legacy mock
 
         let card = document.createElement('div');
-        card.className = 'img-card' + (img.is_thumbnail ? ' is-thumbnail' : '');
+        card.className = 'img-card' + (img.is_thumbnail == 1 ? ' is-thumbnail' : '');
         card.dataset.id = img.id;
 
         card.innerHTML = `
