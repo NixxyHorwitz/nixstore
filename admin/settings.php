@@ -6,14 +6,56 @@ $msg_type = 'success';
 // Helper: save a single uploaded file to assets/branding/, return path
 function save_branding_file($file_key, $allowed = ['image/jpeg','image/png','image/gif','image/webp','image/x-icon','image/vnd.microsoft.icon']) {
     if (empty($_FILES[$file_key]['name'])) return null;
-    $f    = $_FILES[$file_key];
-    $mime = mime_content_type($f['tmp_name']);
-    if (!in_array($mime, $allowed)) return false; // invalid type
-    $ext  = pathinfo($f['name'], PATHINFO_EXTENSION);
+    $f = $_FILES[$file_key];
+    
+    // Check if upload was actually successful
+    if ($f['error'] !== UPLOAD_ERR_OK) return false;
+
+    $ext = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
+    $allowed_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'ico'];
+
+    // Get mime
+    $mime = clone_mime_type($f);
+
+    // Some common mime fallbacks
+    $allowed[] = 'image/x-png';
+    $allowed[] = 'image/pjpeg';
+
+    $isValid = false;
+    if (in_array($mime, $allowed)) {
+        $isValid = true;
+    } elseif (in_array($ext, $allowed_exts)) {
+        // Fallback to extension check if MIME is generic or fails (common in Windows/Laragon)
+        $isValid = true;
+    }
+
+    if (!$isValid) return false; // invalid type
+
     $name = $file_key . '_' . time() . '.' . $ext;
     $dest = __DIR__ . '/../assets/branding/' . $name;
+    
+    if (!is_dir(dirname($dest))) {
+        mkdir(dirname($dest), 0755, true);
+    }
+
     if (!move_uploaded_file($f['tmp_name'], $dest)) return false;
     return 'assets/branding/' . $name;
+}
+
+function clone_mime_type($f) {
+    if (function_exists('finfo_open')) {
+        $finfo = @finfo_open(FILEINFO_MIME_TYPE);
+        if ($finfo) {
+            $m = @finfo_file($finfo, $f['tmp_name']);
+            finfo_close($finfo);
+            if ($m) return $m;
+        }
+    }
+    if (function_exists('mime_content_type')) {
+        $m = @mime_content_type($f['tmp_name']);
+        if ($m) return $m;
+    }
+    return $f['type'] ?? '';
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
