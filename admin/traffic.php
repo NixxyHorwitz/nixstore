@@ -93,8 +93,8 @@ $clicks  = $pdo->query("SELECT * FROM contact_clicks ORDER BY id DESC LIMIT 100"
                 <thead>
                     <tr>
                         <th>Waktu</th>
-                        <th>IP Address</th>
-                        <th>Device / Browser</th>
+                        <th>IP & Lokasi</th>
+                        <th>OS & Device</th>
                         <th>Halaman</th>
                     </tr>
                 </thead>
@@ -102,9 +102,17 @@ $clicks  = $pdo->query("SELECT * FROM contact_clicks ORDER BY id DESC LIMIT 100"
                     <?php foreach($traffic as $t): ?>
                     <tr>
                         <td style="white-space:nowrap;"><?= date('H:i d/m/Y', strtotime($t['created_at'])) ?></td>
-                        <td><code style="font-size:12px;"><?= htmlspecialchars($t['ip_address']) ?></code></td>
-                        <td><span style="color:#777;" title="<?= htmlspecialchars($t['user_agent']) ?>"><?= htmlspecialchars(substr($t['user_agent'], 0, 55)) ?>...</span></td>
-                        <td><?= htmlspecialchars($t['page_visited']) ?></td>
+                        <td>
+                            <code style="font-size:12px;display:block;"><?= htmlspecialchars($t['ip_address']) ?></code>
+                            <span style="font-size:11px;color:#888;"><?= htmlspecialchars($t['location'] ?? 'Unknown location') ?></span>
+                        </td>
+                        <td>
+                            <div style="font-size:12px;font-weight:600;color:#ddd;" title="<?= htmlspecialchars($t['user_agent']) ?>">
+                                <?= htmlspecialchars($t['device_brand'] ?? 'Unknown') ?> - <?= htmlspecialchars($t['device_os'] ?? '') ?>
+                            </div>
+                            <div style="font-size:11px;color:#888;">Browser: <?= htmlspecialchars($t['browser'] ?? 'Unknown') ?></div>
+                        </td>
+                        <td><span style="color:#aaa;font-size:12px;"><?= htmlspecialchars($t['page_visited']) ?></span></td>
                     </tr>
                     <?php endforeach; ?>
                     <?php if(empty($traffic)): ?>
@@ -140,9 +148,9 @@ $clicks  = $pdo->query("SELECT * FROM contact_clicks ORDER BY id DESC LIMIT 100"
                     <tr>
                         <th>Waktu</th>
                         <th>Platform</th>
-                        <th>IP Address</th>
+                        <th>IP & Lokasi</th>
                         <th>Halaman Sumber</th>
-                        <th>Device</th>
+                        <th>OS & Device</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -156,9 +164,17 @@ $clicks  = $pdo->query("SELECT * FROM contact_clicks ORDER BY id DESC LIMIT 100"
                             <span style="background:rgba(42,171,238,0.12);color:#2AABEE;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">Telegram</span>
                             <?php endif; ?>
                         </td>
-                        <td><code style="font-size:12px;"><?= htmlspecialchars($c['ip_address']) ?></code></td>
+                        <td>
+                            <code style="font-size:12px;display:block;"><?= htmlspecialchars($c['ip_address']) ?></code>
+                            <span style="font-size:11px;color:#888;"><?= htmlspecialchars($c['location'] ?? 'Unknown location') ?></span>
+                        </td>
                         <td style="color:#888;font-size:12px;"><?= htmlspecialchars($c['page_source'] ?? '-') ?></td>
-                        <td><span style="color:#666;font-size:11px;" title="<?= htmlspecialchars($c['user_agent']) ?>"><?= htmlspecialchars(substr($c['user_agent'] ?? '', 0, 45)) ?>...</span></td>
+                        <td>
+                            <div style="font-size:12px;font-weight:600;color:#ddd;" title="<?= htmlspecialchars($c['user_agent']) ?>">
+                                <?= htmlspecialchars($c['device_brand'] ?? 'Unknown') ?> - <?= htmlspecialchars($c['device_os'] ?? '') ?>
+                            </div>
+                            <div style="font-size:11px;color:#888;">Browser: <?= htmlspecialchars($c['browser'] ?? 'Unknown') ?></div>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                     <?php if(empty($clicks)): ?>
