@@ -1,5 +1,22 @@
 <?php require 'includes/header.php'; ?>
 <?php
+// Handle clear actions via AJAX POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    header('Content-Type: application/json');
+    if (!isset($_SESSION['admin_logged_in'])) {
+        echo json_encode(['status' => 'error', 'message' => 'Unauthorized']); exit;
+    }
+    if ($_POST['action'] === 'clear_traffic') {
+        $pdo->exec("TRUNCATE TABLE traffic");
+        echo json_encode(['status' => 'success', 'message' => 'Traffic log cleared.']); exit;
+    }
+    if ($_POST['action'] === 'clear_clicks') {
+        $pdo->exec("TRUNCATE TABLE contact_clicks");
+        echo json_encode(['status' => 'success', 'message' => 'Contact clicks log cleared.']); exit;
+    }
+    echo json_encode(['status' => 'error', 'message' => 'Unknown action']); exit;
+}
+
 // Chart: 7 days traffic
 $chart_labels = [];
 $chart_data   = [];
@@ -37,9 +54,19 @@ $traffic = $pdo->query("SELECT * FROM traffic ORDER BY id DESC LIMIT 500")->fetc
 $clicks  = $pdo->query("SELECT * FROM contact_clicks ORDER BY id DESC LIMIT 500")->fetchAll();
 ?>
 
-<div class="page-header mb-4">
-    <h1>Traffic & Analytics</h1>
-    <div class="bc">Monitor your page visits, device analytics, and contact clicks.</div>
+<div class="page-header d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1>Traffic & Analytics</h1>
+        <div class="bc">Monitor your page visits, device analytics, and contact clicks.</div>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary btn-sm" onclick="clearTraffic()">
+            <i class='bx bx-trash me-1'></i> Clear Traffic
+        </button>
+        <button class="btn btn-sm" style="border:1px solid var(--err);color:var(--err);" onclick="clearClicks()">
+            <i class='bx bx-message-x me-1'></i> Clear Clicks
+        </button>
+    </div>
 </div>
 
 <!-- Stats Row -->
@@ -229,6 +256,54 @@ $(document).ready(function() {
         $($(e.target).data('bs-target')).find('.datatable').DataTable().columns.adjust().draw();
     });
 });
+
+function clearTraffic() {
+    Swal.fire({
+        title: 'Clear all traffic logs?',
+        text: 'This will permanently delete all page visit records.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: 'var(--err)',
+        cancelButtonColor: 'var(--mut)',
+        confirmButtonText: 'Yes, clear it',
+        background: 'var(--surface)', color: 'var(--text)'
+    }).then(result => {
+        if (result.isConfirmed) {
+            $.post('', { action: 'clear_traffic' }, function(json) {
+                if (json.status === 'success') {
+                    Toast.fire({ icon: 'success', title: json.message });
+                    setTimeout(() => location.reload(), 800);
+                } else {
+                    Toast.fire({ icon: 'error', title: json.message });
+                }
+            });
+        }
+    });
+}
+
+function clearClicks() {
+    Swal.fire({
+        title: 'Clear all click logs?',
+        text: 'This will permanently delete all contact click records.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: 'var(--err)',
+        cancelButtonColor: 'var(--mut)',
+        confirmButtonText: 'Yes, clear it',
+        background: 'var(--surface)', color: 'var(--text)'
+    }).then(result => {
+        if (result.isConfirmed) {
+            $.post('', { action: 'clear_clicks' }, function(json) {
+                if (json.status === 'success') {
+                    Toast.fire({ icon: 'success', title: json.message });
+                    setTimeout(() => location.reload(), 800);
+                } else {
+                    Toast.fire({ icon: 'error', title: json.message });
+                }
+            });
+        }
+    });
+}
 </script>
 
 <?php require 'includes/footer.php'; ?>
