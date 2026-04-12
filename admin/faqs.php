@@ -1,13 +1,8 @@
 <?php
-// ── AJAX handler harus di paling atas, SEBELUM header output HTML ──
-// Cek dulu apakah ini request AJAX (ada POST 'action')
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    // Bootstrap session + DB + functions tanpa output HTML
     session_start();
     if (!isset($_SESSION['admin_logged_in'])) {
-        http_response_code(403);
-        echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
-        exit;
+        http_response_code(403); echo json_encode(['status' => 'error', 'message' => 'Unauthorized']); exit;
     }
     require '../config/database.php';
     require '../includes/functions.php';
@@ -15,18 +10,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Content-Type: application/json');
     $action = $_POST['action'];
 
+    if ($action === 'get_all') {
+        $faqs = get_all_faqs($pdo);
+        echo json_encode(['data' => $faqs]);
+        exit;
+    }
+
     if ($action === 'get_single') {
-        $id  = (int)($_POST['id'] ?? 0);
+        $id = (int)($_POST['id'] ?? 0);
         $faq = get_faq($pdo, $id);
         echo json_encode(['status' => 'success', 'data' => $faq]);
         exit;
     }
 
     if ($action === 'save') {
-        $id       = (int)($_POST['id'] ?? 0);
+        $id = (int)($_POST['id'] ?? 0);
         $question = trim($_POST['question'] ?? '');
-        $answer   = trim($_POST['answer'] ?? '');
-        $order    = (int)($_POST['display_order'] ?? 0);
+        $answer = trim($_POST['answer'] ?? '');
+        $order = (int)($_POST['display_order'] ?? 0);
         if ($id > 0) {
             $pdo->prepare("UPDATE faqs SET question=?, answer=?, display_order=? WHERE id=?")->execute([$question, $answer, $order, $id]);
         } else {
@@ -47,174 +48,194 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     exit;
 }
 
-// ── Normal page load ──
 require 'includes/header.php';
-$faqs = get_all_faqs($pdo);
 ?>
 
-<div class="flex justify-between items-center mb-4">
-    <h2 style="font-size: 20px; font-weight: 600;">FAQ Manager</h2>
-    <button class="btn btn-primary" onclick="openModal()">+ Tambah FAQ</button>
+<div class="page-header d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1>FAQ Manager</h1>
+        <div class="bc">Manage the frequently asked questions displayed on your site.</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal()"><i class='bx bx-plus me-1'></i> Add FAQ</button>
 </div>
 
-<div class="card card-p0">
-    <div class="table-responsive">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th style="padding-left:30px; width:50px;">#</th>
-                    <th>Pertanyaan</th>
-                    <th style="width:80px;">Urutan</th>
-                    <th class="text-right" style="padding-right:30px;">Aksi</th>
-                </tr>
-            </thead>
-            <tbody id="faqTableBody">
-                <?php if (empty($faqs)): ?>
-                <tr><td colspan="4" style="text-align:center;padding:40px;color:#666;">Belum ada FAQ.</td></tr>
-                <?php else: ?>
-                <?php foreach($faqs as $f): ?>
-                <tr id="row_<?= $f['id'] ?>">
-                    <td style="padding-left:30px; color:#555;"><?= $f['id'] ?></td>
-                    <td style="font-weight:500; color:#fff; max-width:500px;"><?= htmlspecialchars($f['question']) ?></td>
-                    <td><span style="background:var(--bg-base);padding:4px 10px;border-radius:6px;font-size:12px;color:var(--text-muted);"><?= $f['display_order'] ?></span></td>
-                    <td class="text-right" style="padding-right:30px;">
-                        <div class="flex items-center gap-2" style="justify-content:flex-end;">
-                            <button class="btn btn-outline btn-sm" onclick="editFaq(<?= $f['id'] ?>)">Edit</button>
-                            <button class="btn btn-danger-outline btn-sm" onclick="deleteFaq(<?= $f['id'] ?>)">Hapus</button>
-                        </div>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+<div class="card-c">
+    <div class="cb p-0">
+        <div class="table-responsive">
+            <table class="tbl datatable" id="faqTable" style="width:100%">
+                <thead>
+                    <tr>
+                        <th class="px-4" style="width:50px;">#</th>
+                        <th>Question</th>
+                        <th style="width:100px;">Sort Order</th>
+                        <th class="text-end px-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Populated via AJAX -->
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <!-- Modal -->
-<div class="modal-overlay" id="faqModal">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3 class="modal-title" id="modalTitle">Tambah FAQ</h3>
-            <button class="modal-close" onclick="closeModal()">&times;</button>
-        </div>
-        <div class="modal-body">
-            <input type="hidden" id="faq_id" value="0">
-            <div class="form-group">
-                <label class="form-label">Pertanyaan</label>
-                <input type="text" id="faq_question" class="form-input" placeholder="Masukkan pertanyaan..." required>
+<div class="modal fade" id="faqModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="modalTitle">Add FAQ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="form-group">
-                <label class="form-label">Jawaban</label>
-                <textarea id="faq_answer" class="form-input" rows="5" placeholder="Masukkan jawaban lengkap..."></textarea>
+            <div class="modal-body p-4">
+                <form id="faqForm">
+                    <input type="hidden" name="action" value="save">
+                    <input type="hidden" name="id" id="faq_id" value="0">
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-muted fw-semibold">Question</label>
+                        <input type="text" name="question" id="faq_question" class="form-control" required placeholder="Question title...">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-muted fw-semibold">Answer</label>
+                        <textarea name="answer" id="faq_answer" class="form-control" rows="5" required placeholder="Answer in detail..."></textarea>
+                    </div>
+                    
+                    <div class="mb-0">
+                        <label class="form-label text-muted fw-semibold">Display Order</label>
+                        <input type="number" name="display_order" id="faq_order" class="form-control" value="0" min="0">
+                        <small class="text-muted" style="font-size:12px;">Lower number = appears first.</small>
+                    </div>
+                </form>
             </div>
-            <div class="form-group mb-2">
-                <label class="form-label">Urutan Tampil</label>
-                <input type="number" id="faq_order" class="form-input" value="0" min="0">
-                <span class="form-hint">Angka kecil = tampil lebih dulu. Angka sama = urutkan by ID.</span>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveFaq()" id="btnSaveFaq">Save FAQ</button>
             </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeModal()">Batal</button>
-            <button class="btn btn-primary" onclick="saveFaq()">Simpan FAQ</button>
         </div>
     </div>
 </div>
 
-<!-- Toast -->
-<div class="toast-container">
-    <div class="toast" id="liveToast"><span class="toast-msg" id="toastMessage"></span></div>
-</div>
-
 <script>
-let _toastTimeout;
-function showToast(msg, isError = false) {
-    const toast = document.getElementById('liveToast');
-    toast.className = 'toast ' + (isError ? 'error' : 'success');
-    document.getElementById('toastMessage').innerText = msg;
-    toast.classList.remove('show');
-    void toast.offsetWidth;
-    toast.classList.add('show');
-    clearTimeout(_toastTimeout);
-    _toastTimeout = setTimeout(() => toast.classList.remove('show'), 4000);
-}
+let dtTable;
+let $modal;
 
-const modal = document.getElementById('faqModal');
+$(document).ready(function() {
+    $modal = new bootstrap.Modal(document.getElementById('faqModal'));
+    
+    if($.fn.DataTable.isDataTable('#faqTable')){
+        $('#faqTable').DataTable().destroy();
+    }
+    
+    dtTable = $('#faqTable').DataTable({
+        pageLength: 10,
+        ajax: {
+            url: 'faqs.php',
+            type: 'POST',
+            data: { action: 'get_all' },
+            dataSrc: 'data'
+        },
+        order: [[2, 'asc'], [0, 'asc']],
+        columns: [
+            { data: 'id', className: 'px-4' },
+            { data: 'question', render: function(data) { return `<span class="fw-semibold text-white">${data}</span>`; } },
+            { data: 'display_order' },
+            {
+                data: 'id',
+                className: 'text-end px-4',
+                orderable: false,
+                render: function(data) {
+                    return `
+                        <button class="btn btn-sm btn-outline-secondary me-1" onclick="editFaq(${data})" title="Edit"><i class='bx bx-edit'></i></button>
+                        <button class="btn btn-sm btn-danger-outline" onclick="deleteFaq(${data})" title="Delete"><i class='bx bx-trash'></i></button>
+                    `;
+                }
+            }
+        ]
+    });
+});
 
 function openModal() {
-    document.getElementById('faq_id').value = '0';
-    document.getElementById('faq_question').value = '';
-    document.getElementById('faq_answer').value = '';
-    document.getElementById('faq_order').value = '0';
-    document.getElementById('modalTitle').innerText = 'Tambah FAQ';
-    modal.classList.add('show');
+    $('#faqForm')[0].reset();
+    $('#faq_id').val('0');
+    $('#faq_order').val('0');
+    $('#modalTitle').text('Add FAQ');
+    $modal.show();
 }
 
-function closeModal() {
-    modal.classList.remove('show');
-}
-
-async function editFaq(id) {
-    const fd = new FormData();
-    fd.append('action', 'get_single');
-    fd.append('id', id);
-    try {
-        const res = await fetch('faqs.php', { method: 'POST', body: fd });
-        const json = await res.json();
-        if (json.status === 'success' && json.data) {
-            const f = json.data;
-            document.getElementById('faq_id').value = f.id;
-            document.getElementById('faq_question').value = f.question;
-            document.getElementById('faq_answer').value = f.answer;
-            document.getElementById('faq_order').value = f.display_order;
-            document.getElementById('modalTitle').innerText = 'Edit FAQ';
-            modal.classList.add('show');
+function editFaq(id) {
+    $('#faqForm')[0].reset();
+    $('#faq_id').val(id);
+    $('#modalTitle').text('Edit FAQ');
+    
+    $.ajax({
+        url: 'faqs.php',
+        method: 'POST',
+        data: { action: 'get_single', id: id },
+        success: function(json) {
+            if(json.status === 'success' && json.data) {
+                let f = json.data;
+                $('#faq_question').val(f.question);
+                $('#faq_answer').val(f.answer);
+                $('#faq_order').val(f.display_order);
+                $modal.show();
+            } else {
+                Toast.fire({ icon: 'error', title: 'Data not found.' });
+            }
         }
-    } catch(e) {
-        showToast('Gagal memuat data FAQ.', true);
-        console.error(e);
-    }
+    });
 }
 
-async function saveFaq() {
-    const fd = new FormData();
-    fd.append('action', 'save');
-    fd.append('id', document.getElementById('faq_id').value);
-    fd.append('question', document.getElementById('faq_question').value);
-    fd.append('answer', document.getElementById('faq_answer').value);
-    fd.append('display_order', document.getElementById('faq_order').value);
-    try {
-        const res = await fetch('faqs.php', { method: 'POST', body: fd });
-        const json = await res.json();
-        if (json.status === 'success') {
-            closeModal();
-            showToast(json.message);
-            setTimeout(() => location.reload(), 900);
-        } else {
-            showToast(json.message, true);
+function saveFaq() {
+    let $btn = $('#btnSaveFaq');
+    let fd = new FormData($('#faqForm')[0]);
+    
+    $btn.prop('disabled', true).html('<i class="bx bx-loader-alt bx-spin"></i> Saving...');
+    
+    $.ajax({
+        url: 'faqs.php',
+        method: 'POST',
+        data: fd,
+        processData: false,
+        contentType: false,
+        success: function(json) {
+            $btn.prop('disabled', false).text('Save FAQ');
+            if(json.status === 'success') {
+                Toast.fire({ icon: 'success', title: json.message });
+                dtTable.ajax.reload(null, false);
+                $modal.hide();
+            } else {
+                Swal.fire({ icon: 'error', title: 'Error', text: json.message, background: 'var(--surface)', color: 'var(--text)' });
+            }
+        },
+        error: function() {
+            $btn.prop('disabled', false).text('Save FAQ');
+            Toast.fire({ icon: 'error', title: 'Network error.' });
         }
-    } catch(e) {
-        showToast('Terjadi error saat menyimpan.', true);
-        console.error(e);
-    }
+    });
 }
 
-async function deleteFaq(id) {
-    if (!confirm('Hapus FAQ ini secara permanen?')) return;
-    const fd = new FormData();
-    fd.append('action', 'delete');
-    fd.append('id', id);
-    try {
-        const res = await fetch('faqs.php', { method: 'POST', body: fd });
-        const json = await res.json();
-        if (json.status === 'success') {
-            document.getElementById('row_' + id)?.remove();
-            showToast(json.message);
+function deleteFaq(id) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "This FAQ will be deleted permanently!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: 'var(--err)',
+        cancelButtonColor: 'var(--mut)',
+        confirmButtonText: 'Yes, delete it!',
+        background: 'var(--surface)', color: 'var(--text)'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.post('faqs.php', { action: 'delete', id: id }, function(json) {
+                if(json.status === 'success') {
+                    Toast.fire({ icon: 'success', title: 'FAQ deleted' });
+                    dtTable.ajax.reload(null, false);
+                }
+            });
         }
-    } catch(e) {
-        showToast('Gagal menghapus FAQ.', true);
-        console.error(e);
-    }
+    });
 }
 </script>
 
