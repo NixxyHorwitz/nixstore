@@ -26,6 +26,14 @@
       --hh: 62px;
       --r: 12px;
       --rs: 8px;
+
+      /* Bootstrap 5 Overrides */
+      --bs-body-color: var(--text);
+      --bs-body-bg: var(--bg);
+      --bs-heading-color: var(--text);
+      --bs-border-color: var(--border);
+      --bs-nav-link-color: var(--sub);
+      --bs-nav-link-hover-color: var(--text);
     }
 
     *,
@@ -40,6 +48,22 @@
       color: var(--text);
       min-height: 100vh;
       font-size: 14px;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      color: var(--text) !important;
+    }
+
+    .form-label {
+      color: var(--sub) !important;
+    }
+
+    .text-muted {
+      color: var(--mut) !important;
+    }
+
+    p {
+      color: var(--sub);
     }
 
     ::-webkit-scrollbar {
