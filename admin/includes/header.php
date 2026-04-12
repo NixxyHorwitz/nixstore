@@ -1,11 +1,11 @@
 <?php
-session_start();
+@session_start();
 if (!isset($_SESSION['admin_logged_in'])) {
     header("Location: login.php");
     exit;
 }
-require '../config/database.php';
-require '../includes/functions.php';
+require_once '../config/database.php';
+require_once '../includes/functions.php';
 
 $current_page = basename($_SERVER['PHP_SELF']);
 ?>

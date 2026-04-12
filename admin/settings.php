@@ -1,8 +1,7 @@
 <?php
-// Functionality remains mostly the same, shifted POST handler to output JSON
-session_start();
-require '../config/database.php';
-require '../includes/functions.php';
+@session_start();
+require_once '../config/database.php';
+require_once '../includes/functions.php';
 
 // Helper: save a single uploaded file to assets/branding/, return path
 function save_branding_file($file_key, $allowed = ['image/jpeg','image/png','image/gif','image/webp','image/x-icon','image/vnd.microsoft.icon']) {
