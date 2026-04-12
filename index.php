@@ -42,6 +42,7 @@ $contact_eyebrow      = $settings['contact_eyebrow']      ?? 'Hubungi Kami';
 $contact_title        = $settings['contact_title']        ?? 'Siap Mulai? Tanya Dulu Gratis!';
 $contact_subtitle     = $settings['contact_subtitle']     ?? 'Tidak ada kewajiban beli. Konsultasi via WA atau Telegram — kami respond cepat!';
 $footer_text          = $settings['footer_text']          ?? 'All rights reserved.';
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
