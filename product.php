@@ -88,25 +88,24 @@ if ($prod_first_img && file_exists(__DIR__ . '/assets/uploads/' . $prod_first_im
 
         .pv-wrap {
             padding: 76px 16px 60px;
-            max-width: 960px;
+            max-width: 1020px;
             margin: 0 auto;
         }
 
         .pv-grid {
-            display: flex;
-            gap: 36px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
         }
 
         /* ─── GALLERY ─── */
-        .pv-gallery {
-            flex: 1 1 55%;
-            min-width: 0;
-        }
+        .pv-gallery { min-width: 0; position: sticky; top: 80px; }
 
         .pv-slider {
             width: 100%;
-            aspect-ratio: 4 / 3;
-            border-radius: 14px;
+            aspect-ratio: 1;
+            border-radius: 16px;
             overflow: hidden;
             border: 1px solid var(--border, #eaebef);
             background: var(--bg-surface, #fff);
@@ -123,42 +122,48 @@ if ($prod_first_img && file_exists(__DIR__ . '/assets/uploads/' . $prod_first_im
             display: flex !important;
             align-items: center;
             justify-content: center;
-            padding: 16px;
+            padding: 0;
             box-sizing: border-box;
         }
 
         .pv-slider .swiper-slide img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             display: block;
-            border-radius: 6px;
         }
 
         .pv-slider .swiper-pagination-bullet {
-            background: rgba(128,128,128,0.5);
+            background: rgba(128,128,128,0.4);
             opacity: 1;
-            width: 6px;
-            height: 6px;
+            width: 6px; height: 6px;
         }
         .pv-slider .swiper-pagination-bullet-active {
             background: var(--accent, #212121);
-            width: 18px;
+            width: 20px;
             border-radius: 3px;
         }
 
-        /* ─── DETAILS ─── */
-        .pv-details {
-            flex: 1 1 45%;
-            min-width: 0;
+        /* thumbs row */
+        .pv-thumbs { margin-top: 10px; }
+        .pv-thumb-slide {
+            width: 62px !important; height: 62px;
+            border-radius: 10px; overflow: hidden;
+            border: 2px solid transparent; box-sizing: border-box;
+            cursor: pointer; opacity: 0.55; transition: .2s;
         }
+        .pv-thumb-slide.swiper-slide-thumb-active { opacity: 1; border-color: var(--text-primary, #111); }
+        .pv-thumb-slide img { width:100%; height:100%; object-fit:cover; display:block; }
+
+        /* ─── DETAILS ─── */
+        .pv-details { min-width: 0; }
 
         .pv-title {
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 700;
-            line-height: 1.2;
-            letter-spacing: -.5px;
-            margin-bottom: 14px;
+            line-height: 1.25;
+            letter-spacing: -.4px;
+            margin: 0 0 14px;
             word-break: break-word;
         }
 
@@ -167,37 +172,58 @@ if ($prod_first_img && file_exists(__DIR__ . '/assets/uploads/' . $prod_first_im
             flex-wrap: wrap;
             align-items: baseline;
             gap: 10px;
-            padding-bottom: 16px;
-            margin-bottom: 16px;
+            padding-bottom: 14px;
+            margin-bottom: 20px;
             border-bottom: 1px solid var(--border, #eaebef);
         }
+        .pv-price     { font-size: 22px; font-weight: 700; letter-spacing: -.4px; }
+        .pv-old-price { font-size: 13px; color: var(--text-muted, #888); text-decoration: line-through; }
 
-        .pv-price     { font-size: 24px; font-weight: 700; letter-spacing: -.5px; }
-        .pv-old-price { font-size: 14px; color: var(--text-muted, #666); text-decoration: line-through; }
-
+        /* ─── DESCRIPTION MARKUP (Quill output) ─── */
         .pv-desc {
             font-size: 14px;
-            line-height: 1.7;
+            line-height: 1.75;
             color: var(--text-muted, #666);
-            margin-bottom: 28px;
-            white-space: pre-wrap;
+            margin-bottom: 24px;
             word-break: break-word;
+            /* IMPORTANT: never use pre-wrap on rich text output */
+            white-space: normal;
         }
-        
-        .pv-desc.content-markup { line-height: 1.8; font-size: 15px; white-space: normal; }
-        .pv-desc.content-markup p { margin-bottom: 15px; }
-        .pv-desc.content-markup ul, .pv-desc.content-markup ol { margin-bottom: 15px; padding-left: 20px; }
-        .pv-desc.content-markup li { margin-bottom: 6px; }
-        .pv-desc.content-markup a { color: var(--text-primary); text-decoration: underline; }
-        
-        .pv-thumb-slide { width: 70px; height: 70px; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; border-radius: 8px; overflow: hidden; border: 2px solid transparent; box-sizing: border-box; }
-        .pv-thumb-slide.swiper-slide-thumb-active { opacity: 1; border-color: var(--text-primary, #111); }
+        /* Reset all Quill-generated elements to avoid huge gaps */
+        .pv-desc p { margin: 0 0 10px; }
+        .pv-desc p:last-child { margin-bottom: 0; }
+        .pv-desc ul, .pv-desc ol { margin: 0 0 10px; padding-left: 22px; }
+        .pv-desc li { margin-bottom: 3px; }
+        .pv-desc li + li { margin-top: 0; }
+        .pv-desc h1,.pv-desc h2,.pv-desc h3,.pv-desc h4 {
+            font-weight: 700; margin: 14px 0 6px; line-height: 1.25;
+        }
+        .pv-desc h1 { font-size: 18px; }
+        .pv-desc h2 { font-size: 16px; }
+        .pv-desc h3 { font-size: 15px; }
+        .pv-desc strong { font-weight: 700; color: var(--text-primary, #111); }
+        .pv-desc a { color: var(--accent, #212121); text-decoration: underline; }
+        .pv-desc blockquote {
+            border-left: 3px solid var(--border, #eaebef);
+            padding: 2px 0 2px 12px;
+            margin: 0 0 10px;
+            color: var(--text-muted, #888);
+        }
+        /* Quill uses .ql-indent-N for indented lists — collapse extra padding */
+        .pv-desc .ql-indent-1 { padding-left: 18px !important; }
+        .pv-desc .ql-indent-2 { padding-left: 36px !important; }
+        .pv-desc .ql-indent-3 { padding-left: 54px !important; }
+        /* Quill sometimes wraps everything in a single big <p>; break it */
+        .pv-desc br { display: block; content: ''; margin: 0; }
+        /* Kill Quill's default 1.5em paragraph spacing */
+        .pv-desc .ql-editor { padding: 0; }
 
-        .pv-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+        /* ─── ACTION BUTTONS ─── */
+        .pv-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
         .pv-btn {
-            flex: 1 1 calc(50% - 10px);
-            min-width: 130px;
-            padding: 13px 16px;
+            flex: 1 1 calc(50% - 6px);
+            min-width: 120px;
+            padding: 11px 14px;
             text-align: center;
             border-radius: 10px;
             font-weight: 600;
@@ -206,20 +232,22 @@ if ($prod_first_img && file_exists(__DIR__ . '/assets/uploads/' . $prod_first_im
             font-family: inherit;
             cursor: pointer;
             transition: .15s;
+            letter-spacing: -.1px;
         }
         .pv-btn-order { background: var(--accent, #212121); color: var(--bg-base, #f9f9fb); border: 2px solid var(--accent, #212121); }
-        .pv-btn-order:hover { opacity: .85; }
-        .pv-btn-demo  { background: transparent; color: var(--text-primary, #111); border: 2px solid var(--border, #eaebef); }
+        .pv-btn-order:hover { filter: brightness(1.15); }
+        .pv-btn-demo  { background: transparent; color: var(--text-primary, #111); border: 2px solid var(--border, #ddd); }
         .pv-btn-demo:hover { border-color: var(--accent, #212121); }
 
         /* ─── MOBILE ─── */
-        @media (max-width: 680px) {
-            .pv-grid    { flex-direction: column; gap: 20px; }
-            .pv-wrap    { padding: 70px 14px 40px; }
+        @media (max-width: 720px) {
+            .pv-grid    { grid-template-columns: 1fr; gap: 20px; }
+            .pv-gallery { position: static; }
+            .pv-wrap    { padding: 68px 14px 40px; }
             .pv-title   { font-size: 20px; }
             .pv-price   { font-size: 20px; }
-            .pv-actions { flex-direction: row; flex-wrap: wrap; }
-            .pv-btn     { width: auto; flex: 1 1 calc(50% - 10px); min-width: 0; }
+            .pv-actions { gap: 8px; }
+            .pv-btn     { flex: 1 1 calc(50% - 5px); min-width: 0; }
         }
 
         /* ─── FLOATING LEAVES ─── */
@@ -452,7 +480,7 @@ if ($prod_first_img && file_exists(__DIR__ . '/assets/uploads/' . $prod_first_im
                     <span class="pv-price">Rp <?= number_format($product['price'],0,',','.') ?></span>
                 <?php endif; ?>
             </div>
-            <div class="pv-desc content-markup"><?= !empty($product['description']) ? $product['description'] : '' ?></div>
+            <div class="pv-desc"><?= !empty($product['description']) ? $product['description'] : '' ?></div>
             
             <?php
             // Convert normal YouTube url to embed url
