@@ -56,12 +56,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action'])) {
     try {
         if ($action === 'general') {
             $updates = [
-                'site_title'         => $_POST['site_title'] ?? '',
-                'site_description'   => $_POST['site_description'] ?? '',
-                'meta_keywords'      => $_POST['meta_keywords'] ?? '',
-                'developer_contact'  => $_POST['developer_contact'] ?? '',
-                'wa_contact'         => trim($_POST['wa_contact'] ?? ''),
-                'telegram_contact'   => trim($_POST['telegram_contact'] ?? ''),
+                'site_title'            => $_POST['site_title'] ?? '',
+                'site_description'      => $_POST['site_description'] ?? '',
+                'meta_keywords'         => $_POST['meta_keywords'] ?? '',
+                'developer_contact'     => $_POST['developer_contact'] ?? '',
+                'wa_contact'            => trim($_POST['wa_contact'] ?? ''),
+                'telegram_contact'      => trim($_POST['telegram_contact'] ?? ''),
+                // Homepage copy
+                'hero_eyebrow'          => trim($_POST['hero_eyebrow'] ?? ''),
+                'hero_title'            => trim($_POST['hero_title'] ?? ''),
+                'hero_title_highlight'  => trim($_POST['hero_title_highlight'] ?? ''),
+                'hero_subtitle'         => trim($_POST['hero_subtitle'] ?? ''),
+                'hero_btn_primary'      => trim($_POST['hero_btn_primary'] ?? ''),
+                'hero_btn_secondary'    => trim($_POST['hero_btn_secondary'] ?? ''),
+                'services_eyebrow'      => trim($_POST['services_eyebrow'] ?? ''),
+                'services_title'        => trim($_POST['services_title'] ?? ''),
+                'services_subtitle'     => trim($_POST['services_subtitle'] ?? ''),
+                'products_eyebrow'      => trim($_POST['products_eyebrow'] ?? ''),
+                'products_title'        => trim($_POST['products_title'] ?? ''),
+                'products_subtitle'     => trim($_POST['products_subtitle'] ?? ''),
+                'cta_title'             => trim($_POST['cta_title'] ?? ''),
+                'cta_subtitle'          => trim($_POST['cta_subtitle'] ?? ''),
+                'contact_eyebrow'       => trim($_POST['contact_eyebrow'] ?? ''),
+                'contact_title'         => trim($_POST['contact_title'] ?? ''),
+                'contact_subtitle'      => trim($_POST['contact_subtitle'] ?? ''),
+                'footer_text'           => trim($_POST['footer_text'] ?? ''),
             ];
             foreach ($updates as $key => $val) {
                 $pdo->prepare("INSERT INTO settings (key_name, key_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE key_value = VALUES(key_value)")->execute([$key, $val]);
@@ -203,6 +222,96 @@ $settings = get_settings($pdo);
                             <div class="mb-4">
                                 <label class="form-label text-muted fw-semibold"><i class='bx bxl-telegram me-1'></i> Telegram URL</label>
                                 <input type="text" name="telegram_contact" class="form-control" value="<?= htmlspecialchars($settings['telegram_contact'] ?? '') ?>" placeholder="https://t.me/...">
+                            </div>
+
+                            <hr style="border-color:var(--border); margin:24px 0;">
+                            <h5 style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px;"><i class='bx bx-home-alt me-2'></i>Homepage Copy</h5>
+                            <p style="font-size:12px;color:var(--mut);margin-bottom:18px;">Customise all text content shown on the landing page.</p>
+
+                            <div class="mb-3 p-3" style="background:var(--hover);border-radius:10px;border:1px solid var(--border);">
+                                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:12px;">Hero Section</div>
+                                <div class="mb-2">
+                                    <label class="form-label text-muted fw-semibold" style="font-size:11px;">Eyebrow Tag <span style="color:var(--mut);font-weight:400;">(small pill above title)</span></label>
+                                    <input type="text" name="hero_eyebrow" class="form-control form-control-sm" value="<?= htmlspecialchars($settings['hero_eyebrow'] ?? 'Script Premium · Sewa Web · Jasa Custom') ?>">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label text-muted fw-semibold" style="font-size:11px;">Title <span style="color:var(--mut);font-weight:400;">(before gradient text)</span></label>
+                                    <input type="text" name="hero_title" class="form-control form-control-sm" value="<?= htmlspecialchars($settings['hero_title'] ?? 'Solusi Digital untuk Bisnis') ?>">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label text-muted fw-semibold" style="font-size:11px;">Title Highlight <span style="color:var(--mut);font-weight:400;">(gradient colored part)</span></label>
+                                    <input type="text" name="hero_title_highlight" class="form-control form-control-sm" value="<?= htmlspecialchars($settings['hero_title_highlight'] ?? 'Investasi &amp; Web') ?>">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label text-muted fw-semibold" style="font-size:11px;">Subtitle</label>
+                                    <textarea name="hero_subtitle" class="form-control form-control-sm" rows="2"><?= htmlspecialchars($settings['hero_subtitle'] ?? '') ?></textarea>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label text-muted fw-semibold" style="font-size:11px;">Primary Button Text</label>
+                                        <input type="text" name="hero_btn_primary" class="form-control form-control-sm" value="<?= htmlspecialchars($settings['hero_btn_primary'] ?? 'Lihat Produk &amp; Harga') ?>">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-muted fw-semibold" style="font-size:11px;">Secondary Button Text</label>
+                                        <input type="text" name="hero_btn_secondary" class="form-control form-control-sm" value="<?= htmlspecialchars($settings['hero_btn_secondary'] ?? '💬 Konsultasi Gratis') ?>">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3 p-3" style="background:var(--hover);border-radius:10px;border:1px solid var(--border);">
+                                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ok);margin-bottom:12px;">Services Section</div>
+                                <div class="mb-2">
+                                    <label class="form-label text-muted fw-semibold" style="font-size:11px;">Eyebrow</label>
+                                    <input type="text" name="services_eyebrow" class="form-control form-control-sm" value="<?= htmlspecialchars($settings['services_eyebrow'] ?? 'Layanan Kami') ?>">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label text-muted fw-semibold" style="font-size:11px;">Section Title</label>
+                                    <input type="text" name="services_title" class="form-control form-control-sm" value="<?= htmlspecialchars($settings['services_title'] ?? 'Apa yang Kami Tawarkan?') ?>">
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label text-muted fw-semibold" style="font-size:11px;">Subtitle</label>
+                                    <input type="text" name="services_subtitle" class="form-control form-control-sm" value="<?= htmlspecialchars($settings['services_subtitle'] ?? 'Dari script siap pakai hingga jasa custom penuh — kami siap jadi mitra digital Anda') ?>">
+                                </div>
+                            </div>
+
+                            <div class="mb-3 p-3" style="background:var(--hover);border-radius:10px;border:1px solid var(--border);">
+                                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--warn);margin-bottom:12px;">Products Section</div>
+                                <div class="mb-2">
+                                    <label class="form-label text-muted fw-semibold" style="font-size:11px;">Eyebrow</label>
+                                    <input type="text" name="products_eyebrow" class="form-control form-control-sm" value="<?= htmlspecialchars($settings['products_eyebrow'] ?? 'Produk') ?>">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label text-muted fw-semibold" style="font-size:11px;">Section Title</label>
+                                    <input type="text" name="products_title" class="form-control form-control-sm" value="<?= htmlspecialchars($settings['products_title'] ?? 'Pilihan Script &amp; Paket') ?>">
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label text-muted fw-semibold" style="font-size:11px;">Subtitle</label>
+                                    <input type="text" name="products_subtitle" class="form-control form-control-sm" value="<?= htmlspecialchars($settings['products_subtitle'] ?? 'Template premium dan script siap pakai, langsung bisa dipakai untuk bisnis Anda') ?>">
+                                </div>
+                            </div>
+
+                            <div class="mb-3 p-3" style="background:var(--hover);border-radius:10px;border:1px solid var(--border);">
+                                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--pur);margin-bottom:12px;">Contact &amp; CTA Section</div>
+                                <div class="mb-2">
+                                    <label class="form-label text-muted fw-semibold" style="font-size:11px;">Contact Eyebrow</label>
+                                    <input type="text" name="contact_eyebrow" class="form-control form-control-sm" value="<?= htmlspecialchars($settings['contact_eyebrow'] ?? 'Hubungi Kami') ?>">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label text-muted fw-semibold" style="font-size:11px;">Contact Title</label>
+                                    <input type="text" name="contact_title" class="form-control form-control-sm" value="<?= htmlspecialchars($settings['contact_title'] ?? 'Siap Mulai? Tanya Dulu Gratis!') ?>">
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label text-muted fw-semibold" style="font-size:11px;">Contact Subtitle</label>
+                                    <input type="text" name="contact_subtitle" class="form-control form-control-sm" value="<?= htmlspecialchars($settings['contact_subtitle'] ?? 'Tidak ada kewajiban beli. Konsultasi via WA atau Telegram — kami respond cepat!') ?>">
+                                </div>
+                            </div>
+
+                            <div class="mb-4 p-3" style="background:var(--hover);border-radius:10px;border:1px solid var(--border);">
+                                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--sub);margin-bottom:12px;">Footer</div>
+                                <div class="mb-0">
+                                    <label class="form-label text-muted fw-semibold" style="font-size:11px;">Footer Additional Text <span style="color:var(--mut);font-weight:400;">(optional, shown after copyright)</span></label>
+                                    <input type="text" name="footer_text" class="form-control form-control-sm" value="<?= htmlspecialchars($settings['footer_text'] ?? '') ?>" placeholder="All rights reserved.">
+                                </div>
                             </div>
                             
                             <button type="submit" class="btn btn-primary btn-save w-100">Save General Settings</button>

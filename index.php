@@ -23,8 +23,25 @@ $site_favicon = $settings['site_favicon'] ?? '';
 $site_banner  = $settings['site_banner'] ?? '';
 $og_image     = $settings['og_image'] ?? $site_banner;
 $og_title     = $settings['og_title'] ?? $settings['site_title'] ?? '';
-$og_desc      = $settings['og_description'] ?? $settings['site_description'] ?? ''
-?>
+$og_desc      = $settings['og_description'] ?? $settings['site_description'] ?? '';
+
+// Homepage copy — all with fallbacks so the old default text still shows if not set
+$hero_eyebrow         = $settings['hero_eyebrow']         ?? 'Script Premium · Sewa Web · Jasa Custom';
+$hero_title           = $settings['hero_title']           ?? 'Solusi Digital untuk Bisnis';
+$hero_title_highlight = $settings['hero_title_highlight'] ?? 'Investasi &amp; Web';
+$hero_subtitle        = $settings['hero_subtitle']        ?? $site_desc;
+$hero_btn_primary     = $settings['hero_btn_primary']     ?? 'Lihat Produk &amp; Harga';
+$hero_btn_secondary   = $settings['hero_btn_secondary']   ?? '💬 Konsultasi Gratis';
+$services_eyebrow     = $settings['services_eyebrow']     ?? 'Layanan Kami';
+$services_title       = $settings['services_title']       ?? 'Apa yang Kami Tawarkan?';
+$services_subtitle    = $settings['services_subtitle']    ?? 'Dari script siap pakai hingga jasa custom penuh — kami siap jadi mitra digital Anda';
+$products_eyebrow     = $settings['products_eyebrow']     ?? 'Produk';
+$products_title       = $settings['products_title']       ?? 'Pilihan Script &amp; Paket';
+$products_subtitle    = $settings['products_subtitle']    ?? 'Template premium dan script siap pakai, langsung bisa dipakai untuk bisnis Anda';
+$contact_eyebrow      = $settings['contact_eyebrow']      ?? 'Hubungi Kami';
+$contact_title        = $settings['contact_title']        ?? 'Siap Mulai? Tanya Dulu Gratis!';
+$contact_subtitle     = $settings['contact_subtitle']     ?? 'Tidak ada kewajiban beli. Konsultasi via WA atau Telegram — kami respond cepat!';
+$footer_text          = $settings['footer_text']          ?? 'All rights reserved.';
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -238,7 +255,6 @@ $og_desc      = $settings['og_description'] ?? $settings['site_description'] ?? 
         .card-img-wrapper {
             position: relative;
             width: 100%;
-            height: 200px;
             overflow: hidden;
             background: var(--bg-surface);
             display: flex;
@@ -246,7 +262,13 @@ $og_desc      = $settings['og_description'] ?? $settings['site_description'] ?? 
             justify-content: center;
             border-bottom: 1px solid var(--border);
         }
-        .card-img { width:100%; height:100%; object-fit:contain; transition: transform 0.4s ease; }
+        .card-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: contain;
+            transition: transform 0.4s ease;
+        }
         .card:hover .card-img { transform: scale(1.03); }
         .badge { position:absolute; top:10px; right:10px; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; backdrop-filter:blur(4px); }
         .badge-sale { background: linear-gradient(135deg, #f43f5e, #ec4899); color: #fff; }
@@ -370,7 +392,6 @@ $og_desc      = $settings['og_description'] ?? $settings['site_description'] ?? 
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
             .product-grid { grid-template-columns: repeat(2,1fr); gap: 12px; }
-            .card-img-wrapper { height: 150px; }
             .card-title { font-size: 13px; }
             .current-price { font-size: 15px; }
             .card-desc { display: none; }
@@ -453,15 +474,15 @@ $og_desc      = $settings['og_description'] ?? $settings['site_description'] ?? 
     <div class="container" style="position:relative;">
         <div class="hero-eyebrow">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="6" r="6"/></svg>
-            Script Premium · Sewa Web · Jasa Custom
+            <?= htmlspecialchars($hero_eyebrow) ?>
         </div>
         <h1 class="hero-title">
-            Solusi Digital<br>untuk Bisnis <span class="highlight">Investasi & Web</span>
+            <?= nl2br(htmlspecialchars($hero_title)) ?><span class="highlight"> <?= htmlspecialchars($hero_title_highlight) ?></span>
         </h1>
-        <p class="hero-subtitle"><?= $site_desc ?></p>
+        <p class="hero-subtitle"><?= nl2br(htmlspecialchars($hero_subtitle)) ?></p>
         <div class="hero-actions">
-            <a href="#products" class="btn-hero-primary">Lihat Produk &amp; Harga</a>
-            <button onclick="openContactModal('hero')" class="btn-hero-secondary" style="cursor:pointer;background:none;font-family:inherit;">&#x1F4AC; Konsultasi Gratis</button>
+            <a href="#products" class="btn-hero-primary"><?= htmlspecialchars($hero_btn_primary) ?></a>
+            <button onclick="openContactModal('hero')" class="btn-hero-secondary" style="cursor:pointer;background:none;font-family:inherit;"><?= htmlspecialchars($hero_btn_secondary) ?></button>
         </div>
     </div>
 </header>
@@ -494,10 +515,10 @@ $og_desc      = $settings['og_description'] ?? $settings['site_description'] ?? 
 
     <!-- SERVICES -->
     <section id="services" style="padding-top:60px; margin-bottom:70px;">
-        <div class="section-eyebrow">Layanan Kami</div>
+        <div class="section-eyebrow"><?= htmlspecialchars($services_eyebrow) ?></div>
         <div class="section-title">
-            <h2>Apa yang Kami Tawarkan?</h2>
-            <p>Dari script siap pakai hingga jasa custom penuh — kami siap jadi mitra digital Anda</p>
+            <h2><?= htmlspecialchars($services_title) ?></h2>
+            <p><?= htmlspecialchars($services_subtitle) ?></p>
         </div>
         <div class="services-grid">
             <!-- Investasi Script -->
@@ -537,10 +558,10 @@ $og_desc      = $settings['og_description'] ?? $settings['site_description'] ?? 
 
     <!-- PRODUCTS -->
     <section id="products" style="margin-bottom: 70px;">
-        <div class="section-eyebrow">Produk</div>
+        <div class="section-eyebrow"><?= htmlspecialchars($products_eyebrow) ?></div>
         <div class="section-title">
-            <h2>Pilihan Script & Paket</h2>
-            <p>Template premium dan script siap pakai, langsung bisa dipakai untuk bisnis Anda</p>
+            <h2><?= htmlspecialchars($products_title) ?></h2>
+            <p><?= htmlspecialchars($products_subtitle) ?></p>
         </div>
 
         <div class="product-grid">
@@ -589,10 +610,10 @@ $og_desc      = $settings['og_description'] ?? $settings['site_description'] ?? 
 
     <!-- CONTACT / CTA (trigger modal) -->
     <section id="contact" style="margin: 70px 0; text-align:center;">
-        <div class="section-eyebrow">Hubungi Kami</div>
+        <div class="section-eyebrow"><?= htmlspecialchars($contact_eyebrow) ?></div>
         <div class="section-title">
-            <h2>Siap Mulai? Tanya Dulu Gratis!</h2>
-            <p>Tidak ada kewajiban beli. Konsultasi via WA atau Telegram — kami respond cepat!</p>
+            <h2><?= htmlspecialchars($contact_title) ?></h2>
+            <p><?= htmlspecialchars($contact_subtitle) ?></p>
         </div>
         <button onclick="openContactModal('cta-section')" style="
             padding:16px 40px; background:linear-gradient(135deg,#818cf8,#c084fc);
@@ -637,7 +658,7 @@ $og_desc      = $settings['og_description'] ?? $settings['site_description'] ?? 
 
 <footer class="footer">
     <div class="container">
-        <p>&copy; <?= date('Y') ?> <?= $site_title ?>. All rights reserved.</p>
+        <p>&copy; <?= date('Y') ?> <?= $site_title ?>. <?= htmlspecialchars($footer_text) ?></p>
     </div>
 </footer>
 
