@@ -64,24 +64,25 @@ switch($action){
             $product_id = $pdo->lastInsertId();
         }
 
-        // Upload images
-        if(!empty($_FILES['images']['name'][0])){
-            // Get current max sort_order
+        // Attach images selected from Gallery
+        $gallery_images_raw = $_POST['gallery_images'] ?? '[]';
+        $gallery_images = json_decode($gallery_images_raw, true);
+        if (is_array($gallery_images) && !empty($gallery_images)) {
             $max_stmt = $pdo->prepare("SELECT MAX(sort_order) FROM product_images WHERE product_id=?");
             $max_stmt->execute([$product_id]);
             $max_order = (int)$max_stmt->fetchColumn();
 
-            foreach($_FILES['images']['name'] as $key => $name){
-                if($_FILES['images']['error'][$key] == 0){
-                    $ext = pathinfo($name, PATHINFO_EXTENSION);
-                    $new_name = time()."_".$key.".".$ext;
-                    if(move_uploaded_file($_FILES['images']['tmp_name'][$key], '../assets/uploads/'.$new_name)){
-                        $pdo->prepare("INSERT INTO product_images (product_id, image_path, sort_order) VALUES (?, ?, ?)")
-                            ->execute([$product_id, $new_name, ++$max_order]);
-                    }
+            foreach ($gallery_images as $img_name) {
+                // Ensure image isn't already attached to avoid duplicates
+                $chk = $pdo->prepare("SELECT id FROM product_images WHERE product_id=? AND image_path=?");
+                $chk->execute([$product_id, $img_name]);
+                if (!$chk->fetch()) {
+                    $pdo->prepare("INSERT INTO product_images (product_id, image_path, sort_order) VALUES (?, ?, ?)")
+                        ->execute([$product_id, $img_name, ++$max_order]);
                 }
             }
         }
+        
         echo json_encode(['status' => 'success', 'message' => 'Product saved.']);
         break;
 

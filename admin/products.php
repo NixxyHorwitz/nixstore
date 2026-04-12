@@ -164,8 +164,10 @@ td.thumb-col img { width: 44px; height: 44px; border-radius: 8px; object-fit: co
                                     <div id="existingImages" class="mb-3"></div>
                                     
                                     <div>
-                                        <input type="file" name="images[]" id="file_input" class="form-control" accept="image/*" multiple>
-                                        <div class="form-text" style="font-size: 12px; color: var(--mut);">Select multiple images holding Ctrl/Cmd.</div>
+                                        <button type="button" class="btn btn-outline-primary w-100" onclick="openGalleryPickerModal()">
+                                            <i class='bx bx-images me-1'></i> Pick from Gallery
+                                        </button>
+                                        <input type="hidden" name="gallery_images" id="prod_gallery_images" value="[]">
                                     </div>
                                 </div>
                             </div>
@@ -188,6 +190,42 @@ td.thumb-col img { width: 44px; height: 44px; border-radius: 8px; object-fit: co
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" onclick="saveProduct()" id="btnSaveProd">Save Product</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gallery Picker Modal -->
+<style>
+.gp-item {
+    position: relative; border-radius: 8px; overflow: hidden; border: 2px solid transparent; cursor: pointer;
+    transition: all 0.2s;
+}
+.gp-item img { width: 100%; height: 100px; object-fit: cover; display: block; }
+.gp-item.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--as); }
+.gp-item.selected::after {
+    content: '\eb31'; font-family: 'boxicons'; position: absolute; top: 4px; right: 4px;
+    background: var(--accent); color: #fff; border-radius: 50%; width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+}
+</style>
+<div class="modal fade" id="galleryPickerModal" tabindex="-1" aria-hidden="true" style="z-index:1065;">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content" style="background:var(--surface);">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title fw-bold">Select Images from Gallery</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 bg-dark" style="background:var(--bg) !important;">
+                <div id="gpLoading" class="text-center py-5 text-muted"><i class="bx bx-loader-alt bx-spin fs-1"></i></div>
+                <div id="gpGrid" style="display:none; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px;"></div>
+            </div>
+            <div class="modal-footer border-top-0 justify-content-between">
+                <div class="text-muted"><span id="gpSelectedCount">0</span> selected</div>
+                <div>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmGallerySelection()">Attach Selected</button>
+                </div>
             </div>
         </div>
     </div>
@@ -310,6 +348,7 @@ function openModal() {
     $('#prod_id').val('0');
     $('#modalTitle').text('Add New Product');
     $('#existingImages').empty();
+    $('#prod_gallery_images').val('[]');
     $('#insertImageGrid').empty();
     $('#insertImgGroup').hide();
     $('#customButtonsContainer').empty();
@@ -327,6 +366,7 @@ function editProduct(id) {
     $('#prod_id').val(id);
     $('#modalTitle').text('Edit Product');
     $('#existingImages, #insertImageGrid, #customButtonsContainer').empty();
+    $('#prod_gallery_images').val('[]');
     $('#insertImgGroup').hide();
     
     $.ajax({
@@ -608,6 +648,62 @@ function syncButtons() {
         }
     });
     $('#prod_custom_buttons').val(JSON.stringify(btns));
+}
+
+// Gallery Picker Modal Integration
+let gpModal;
+function openGalleryPickerModal() {
+    if(!gpModal) gpModal = new bootstrap.Modal(document.getElementById('galleryPickerModal'));
+    $('#gpGrid').hide().empty();
+    $('#gpLoading').show();
+    $('#gpSelectedCount').text('0');
+    gpModal.show();
+    
+    $.get('api_gallery.php?action=get_all', function(json) {
+        $('#gpLoading').hide();
+        if(json.status === 'success') {
+            $('#gpGrid').css('display', 'grid');
+            json.data.forEach(img => {
+                let html = `
+                    <div class="gp-item" data-name="${img.name}" onclick="$(this).toggleClass('selected'); $('#gpSelectedCount').text($('.gp-item.selected').length)">
+                        <img src="${img.url}" loading="lazy">
+                    </div>
+                `;
+                $('#gpGrid').append(html);
+            });
+        }
+    });
+}
+
+function confirmGallerySelection() {
+    let selected = [];
+    $('.gp-item.selected').each(function() {
+        let name = $(this).data('name');
+        selected.push(name);
+        
+        // Append visually to existingImages
+        let mockId = 'ns_' + Math.floor(Math.random()*10000);
+        let cardHTML = `
+            <div class="img-card new-attached" data-name="${name}">
+                <img class="img-thumb" src="../assets/uploads/${name}">
+                <div class="img-actions">
+                    <button type="button" class="btn-del-img" title="Remove" onclick="$(this).closest('.img-card').remove(); syncGalleryJSON();"><i class='bx bx-x'></i></button>
+                </div>
+            </div>
+        `;
+        $('#existingImages').append(cardHTML);
+    });
+    
+    syncGalleryJSON();
+    gpModal.hide();
+}
+
+function syncGalleryJSON() {
+    let attached = [];
+    $('.img-card.new-attached').each(function() {
+        attached.push($(this).data('name'));
+    });
+    $('#prod_gallery_images').val(JSON.stringify(attached));
 }
 </script>
 <?php require 'includes/footer.php'; ?>

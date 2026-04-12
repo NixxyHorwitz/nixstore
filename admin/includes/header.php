@@ -103,6 +103,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <a href="products.php" class="sb-link <?= strpos($current_page,'product') !== false ? 'active' : '' ?>">
             <i class='bx bx-box'></i> Catalog Produk
         </a>
+        <a href="gallery.php" class="sb-link <?= $current_page == 'gallery.php' ? 'active' : '' ?>">
+            <i class='bx bx-images'></i> Media Gallery
+        </a>
         <a href="traffic.php" class="sb-link <?= $current_page == 'traffic.php' ? 'active' : '' ?>">
             <i class='bx bx-bar-chart-alt-2'></i> Analytics
         </a>
