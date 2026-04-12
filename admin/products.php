@@ -450,7 +450,7 @@ function deleteProduct(id) {
 }
 
 // Gallery & Images
-function renderImageGrid(images, productId) {
+function renderImageGrid(images) {
     let $cont = $('#existingImages');
     let $insGrid = $('#insertImageGrid');
     $cont.empty(); $insGrid.empty();
@@ -459,13 +459,14 @@ function renderImageGrid(images, productId) {
         if(img.is_mock) return;
         
         let thumbCls = img.is_thumbnail == 1 ? ' is-thumbnail' : '';
+        let name = img.image_path;
         let cardHTML = `
-            <div class="img-card${thumbCls}" data-id="${img.id}">
-                <img class="img-thumb" src="../assets/uploads/${img.image_path}">
+            <div class="img-card${thumbCls}" data-name="${name}">
+                <img class="img-thumb" src="../assets/uploads/${name}">
                 <div class="badge-thumb">★ Thumb</div>
                 <div class="img-actions">
-                    <button type="button" class="btn-del-img" title="Remove" onclick="deleteImage(${img.id}, ${productId})"><i class='bx bx-x'></i></button>
-                    <button type="button" class="btn-set-thumb" title="Set Thumbnail" onclick="setThumbnail(${img.id}, ${productId})"><i class='bx bxs-star'></i></button>
+                    <button type="button" class="btn-del-img" title="Remove" onclick="deleteImageUi(this)"><i class='bx bx-x'></i></button>
+                    <button type="button" class="btn-set-thumb" title="Set Thumbnail" onclick="setThumbnailUi(this)"><i class='bx bxs-star'></i></button>
                 </div>
             </div>
         `;
@@ -473,11 +474,11 @@ function renderImageGrid(images, productId) {
 
         // For Quill Insert
         let insHTML = `
-            <div style="width:60px;height:60px;border-radius:6px;overflow:hidden;cursor:pointer;border:1px solid var(--border);position:relative;" 
-                 onclick="openImgPicker('../assets/uploads/${img.image_path}', this)"
+            <div class="ins-img-grid-item" style="width:60px;height:60px;border-radius:6px;overflow:hidden;cursor:pointer;border:1px solid var(--border);position:relative;" 
+                 onclick="openImgPicker('../assets/uploads/${name}', this)"
                  onmouseenter="$(this).find('.ins-overlay').css({opacity:1, background:'rgba(0,0,0,0.5)'})"
                  onmouseleave="$(this).find('.ins-overlay').css({opacity:0, background:'rgba(0,0,0,0)'})">
-                <img src="../assets/uploads/${img.image_path}" style="width:100%;height:100%;object-fit:cover;">
+                <img src="../assets/uploads/${name}" style="width:100%;height:100%;object-fit:cover;">
                 <div class="ins-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0);transition:all .15s;display:flex;align-items:center;justify-content:center;font-size:24px;opacity:0;color:#fff;"><i class='bx bx-plus'></i></div>
             </div>
         `;
@@ -485,6 +486,7 @@ function renderImageGrid(images, productId) {
     });
 
     $('#insertImgGroup').toggle(images.length > 0);
+    syncGalleryJSON();
 
     if(_sortable) _sortable.destroy();
     _sortable = Sortable.create($cont[0], {
@@ -492,35 +494,22 @@ function renderImageGrid(images, productId) {
         ghostClass: 'sortable-ghost',
         dragClass: 'sortable-drag',
         onEnd: function() {
-            let order = [];
-            $cont.find('.img-card').each(function() { order.push($(this).data('id')); });
-            $.post('api_products.php', { action: 'reorder_images', product_id: productId, order: order });
+            syncGalleryJSON();
         }
     });
 }
 
-function deleteImage(imgId, productId) {
-    if(confirm('Delete this image?')) {
-        $.post('api_products.php', { action: 'delete_image', img_id: imgId, product_id: productId }, function(json) {
-            if(json.status === 'success') {
-                $.get(`api_products.php?action=get_single&id=${productId}`, function(res) {
-                    if(res.status === 'success') renderImageGrid(res.data.images || [], productId);
-                });
-                dtTable.ajax.reload(null, false);
-            }
-        });
+function deleteImageUi(btn) {
+    if(confirm('Remove this image from product?')) {
+        $(btn).closest('.img-card').remove();
+        syncGalleryJSON();
     }
 }
 
-function setThumbnail(imgId, productId) {
-    $.post('api_products.php', { action: 'set_thumbnail', img_id: imgId, product_id: productId }, function(json) {
-        if(json.status === 'success') {
-            $('.img-card').removeClass('is-thumbnail');
-            $(`.img-card[data-id="${imgId}"]`).addClass('is-thumbnail');
-            Toast.fire({ icon: 'success', title: 'Thumbnail updated' });
-            dtTable.ajax.reload(null, false);
-        }
-    });
+function setThumbnailUi(btn) {
+    $('.img-card').removeClass('is-thumbnail');
+    $(btn).closest('.img-card').addClass('is-thumbnail');
+    syncGalleryJSON();
 }
 
 // Image Insert Picker
@@ -682,12 +671,13 @@ function confirmGallerySelection() {
         selected.push(name);
         
         // Append visually to existingImages
-        let mockId = 'ns_' + Math.floor(Math.random()*10000);
         let cardHTML = `
-            <div class="img-card new-attached" data-name="${name}">
+            <div class="img-card" data-name="${name}">
                 <img class="img-thumb" src="../assets/uploads/${name}">
+                <div class="badge-thumb">★ Thumb</div>
                 <div class="img-actions">
-                    <button type="button" class="btn-del-img" title="Remove" onclick="$(this).closest('.img-card').remove(); syncGalleryJSON();"><i class='bx bx-x'></i></button>
+                    <button type="button" class="btn-del-img" title="Remove" onclick="deleteImageUi(this)"><i class='bx bx-x'></i></button>
+                    <button type="button" class="btn-set-thumb" title="Set Thumbnail" onclick="setThumbnailUi(this)"><i class='bx bxs-star'></i></button>
                 </div>
             </div>
         `;
@@ -700,8 +690,11 @@ function confirmGallerySelection() {
 
 function syncGalleryJSON() {
     let attached = [];
-    $('.img-card.new-attached').each(function() {
-        attached.push($(this).data('name'));
+    $('#existingImages .img-card').each(function() {
+        attached.push({
+            name: $(this).data('name'),
+            thumb: $(this).hasClass('is-thumbnail')
+        });
     });
     $('#prod_gallery_images').val(JSON.stringify(attached));
 }

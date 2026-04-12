@@ -64,21 +64,28 @@ switch($action){
             $product_id = $pdo->lastInsertId();
         }
 
-        // Attach images selected from Gallery
+        // Complete replacement of product_images state based on final saved draft form
         $gallery_images_raw = $_POST['gallery_images'] ?? '[]';
         $gallery_images = json_decode($gallery_images_raw, true);
-        if (is_array($gallery_images) && !empty($gallery_images)) {
-            $max_stmt = $pdo->prepare("SELECT MAX(sort_order) FROM product_images WHERE product_id=?");
-            $max_stmt->execute([$product_id]);
-            $max_order = (int)$max_stmt->fetchColumn();
 
-            foreach ($gallery_images as $img_name) {
-                // Ensure image isn't already attached to avoid duplicates
-                $chk = $pdo->prepare("SELECT id FROM product_images WHERE product_id=? AND image_path=?");
-                $chk->execute([$product_id, $img_name]);
-                if (!$chk->fetch()) {
-                    $pdo->prepare("INSERT INTO product_images (product_id, image_path, sort_order) VALUES (?, ?, ?)")
-                        ->execute([$product_id, $img_name, ++$max_order]);
+        // Wipe old images for this product
+        $pdo->prepare("DELETE FROM product_images WHERE product_id=?")->execute([$product_id]);
+
+        if (is_array($gallery_images) && !empty($gallery_images)) {
+            $sortVal = 1;
+            foreach ($gallery_images as $img_obj) {
+                // Determine if it was just string (legacy compatibility) or object
+                if (is_array($img_obj)) {
+                    $img_name = $img_obj['name'] ?? '';
+                    $is_thumb = !empty($img_obj['thumb']) ? 1 : 0;
+                } else {
+                    $img_name = $img_obj;
+                    $is_thumb = ($sortVal === 1) ? 1 : 0;
+                }
+
+                if ($img_name) {
+                    $pdo->prepare("INSERT INTO product_images (product_id, image_path, sort_order, is_thumbnail) VALUES (?, ?, ?, ?)")
+                        ->execute([$product_id, $img_name, $sortVal++, $is_thumb]);
                 }
             }
         }
@@ -94,49 +101,6 @@ switch($action){
         }
         $pdo->prepare("DELETE FROM products WHERE id=?")->execute([$id]);
         echo json_encode(['status' => 'success', 'message' => 'Product deleted.']);
-        break;
-
-    case 'delete_image':
-        $img_id = (int)($_POST['img_id'] ?? 0);
-        $product_id = (int)($_POST['product_id'] ?? 0);
-        $stmt = $pdo->prepare("SELECT image_path FROM product_images WHERE id=? AND product_id=?");
-        $stmt->execute([$img_id, $product_id]);
-        $path = $stmt->fetchColumn();
-        if($path && file_exists('../assets/uploads/'.$path)){
-            unlink('../assets/uploads/'.$path);
-            $pdo->prepare("DELETE FROM product_images WHERE id=?")->execute([$img_id]);
-            echo json_encode(['status'=>'success']);
-        } else {
-            echo json_encode(['status'=>'error', 'message'=>'Image not found.']);
-        }
-        break;
-
-    case 'reorder_images':
-        // Expects POST: product_id, order[] = array of image IDs in new order
-        $product_id = (int)($_POST['product_id'] ?? 0);
-        $order = $_POST['order'] ?? [];
-        if($product_id && is_array($order)){
-            foreach($order as $sort => $img_id){
-                $pdo->prepare("UPDATE product_images SET sort_order=? WHERE id=? AND product_id=?")
-                    ->execute([(int)$sort, (int)$img_id, $product_id]);
-            }
-            echo json_encode(['status'=>'success']);
-        } else {
-            echo json_encode(['status'=>'error', 'message'=>'Invalid data.']);
-        }
-        break;
-
-    case 'set_thumbnail':
-        // Sets is_thumbnail=1 for img_id, resets all others for same product
-        $img_id = (int)($_POST['img_id'] ?? 0);
-        $product_id = (int)($_POST['product_id'] ?? 0);
-        if($img_id && $product_id){
-            $pdo->prepare("UPDATE product_images SET is_thumbnail=0 WHERE product_id=?")->execute([$product_id]);
-            $pdo->prepare("UPDATE product_images SET is_thumbnail=1 WHERE id=? AND product_id=?")->execute([$img_id, $product_id]);
-            echo json_encode(['status'=>'success']);
-        } else {
-            echo json_encode(['status'=>'error', 'message'=>'Invalid data.']);
-        }
         break;
 
     default:
